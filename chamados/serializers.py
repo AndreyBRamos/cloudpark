@@ -1,6 +1,7 @@
 from rest_framework import serializers
 from django.contrib.auth.models import User
 from .models import Ticket
+from .models import Profile
 
 class UserMiniSerializer(serializers.ModelSerializer):
     role = serializers.CharField(source="profile.role", read_only=True)
@@ -33,7 +34,8 @@ class TicketSerializer(serializers.ModelSerializer):
         if instance.status != "RESOLVIDO" and new_status == "RESOLVIDO":
             if not request or not request.user.is_authenticated:
                 raise serializers.ValidationError("Autenticação necessária.")
-            role = getattr(getattr(request.user, "profile", None), "role", None)
-            if role != "TECNICO":
+            # Garante que o usuário tem Profile
+            profile, _ = Profile.objects.get_or_create(user=request.user)
+            if profile.role != "TECNICO":
                 raise serializers.ValidationError("Apenas um técnico pode marcar como 'Resolvido'.")
         return super().update(instance, validated_data)

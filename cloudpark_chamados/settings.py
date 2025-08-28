@@ -27,7 +27,7 @@ SECRET_KEY = 'django-insecure-d=q18p$by*3#vvr!!+$)4+q#2#8*y7^uj5yp@n+%c8dz(2$jep
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = [*]
+ALLOWED_HOSTS = ['*']
 
 
 # Application definition
@@ -40,10 +40,10 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     # terceiros
-    "rest_framework",
-    "rest_framework_simplejwt",
+    'rest_framework',
+    'rest_framework_simplejwt',
     # local
-    "chamados",
+    'chamados.apps.ChamadosConfig',
 ]
 
 MIDDLEWARE = [
