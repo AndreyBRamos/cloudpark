@@ -30,6 +30,13 @@
         <div class="col-md-2">
           <button id="btnCarregar" class="btn btn-primary w-100">Carregar</button>
         </div>
+        <div class="col-md-4 d-flex align-items-center gap-2">
+          <div class="form-check form-switch">
+            <input class="form-check-input" type="checkbox" id="autorefresh">
+            <label class="form-check-label" for="autorefresh">Atualização automática (10s)</label>
+          </div>
+          <small class="text-muted" id="ultimaAtualizacao"></small>
+        </div>
       </div>
     </div>
   </div>
@@ -92,6 +99,10 @@
 </div>
 
 <script>
+// Variáveis para autopolling
+let autoRefreshTimer = null;
+let ultimaAtualizacao = "";
+
 function token(){ return localStorage.getItem("access_atendente"); }
 function authHeaders(){ return {"Authorization":"Bearer " + token(), "Content-Type":"application/json"}; }
 function exigirToken(){ if(!token()){ window.location.href="/atendente/login/"; } }
@@ -99,8 +110,34 @@ exigirToken();
 document.getElementById("sair").onclick = () => {  
   localStorage.removeItem("access_atendente");
   localStorage.removeItem("refresh_atendente");
+  stopAutoRefresh();
   window.location.href="/atendente/login/";
 };
+
+// Funções para autopolling
+function toggleAutoRefresh() {
+  const checkbox = document.getElementById("autorefresh");
+  if (checkbox.checked) {
+    startAutoRefresh();
+  } else {
+    stopAutoRefresh();
+  }
+}
+
+function startAutoRefresh() {
+  stopAutoRefresh();
+  autoRefreshTimer = setInterval(carregar, 10000); // 10 segundos
+}
+
+function stopAutoRefresh() {
+  if (autoRefreshTimer) {
+    clearInterval(autoRefreshTimer);
+    autoRefreshTimer = null;
+  }
+}
+
+// Adicionar event listener para o checkbox
+document.getElementById("autorefresh").addEventListener("change", toggleAutoRefresh);
 
 async function carregar(){
   const status = document.getElementById("filtroStatus").value;
@@ -127,6 +164,11 @@ async function carregar(){
     `;
     tbody.appendChild(tr);
   });
+  
+  // Atualizar timestamp da última atualização
+  ultimaAtualizacao = new Date().toLocaleTimeString();
+  document.getElementById("ultimaAtualizacao").textContent = `Última atualização: ${ultimaAtualizacao}`;
+  
   document.querySelectorAll(".btn-salvar").forEach(btn => {
     btn.addEventListener("click", async (e) => {
       const id = e.target.getAttribute("data-id");
@@ -179,6 +221,9 @@ document.getElementById("formNovo").addEventListener("submit", async (e) => {
     document.getElementById("msgNovo").innerText = err.message;
   }
 });
+
+// Limpar timer quando a página for fechada
+window.addEventListener("beforeunload", stopAutoRefresh);
 </script>
 </body>
 </html>
