@@ -19,6 +19,7 @@
     </div>
   </div>
 
+  <!-- LOGIN -->
   <div v-if="!token" class="row justify-content-center">
     <div class="col-md-6">
       <div class="card shadow-sm">
@@ -40,6 +41,7 @@
     </div>
   </div>
 
+  <!-- LISTAGEM -->
   <div v-else>
     <div class="card mb-3">
       <div class="card-body row g-2 align-items-end">
@@ -55,6 +57,13 @@
         </div>
         <div class="col-md-2">
           <button class="btn btn-primary w-100" @click="carregar">Carregar</button>
+        </div>
+        <div class="col-md-4 d-flex align-items-center gap-2">
+          <div class="form-check form-switch">
+            <input class="form-check-input" type="checkbox" id="autorefresh" v-model="autoRefresh" @change="toggleAutoRefresh">
+            <label class="form-check-label" for="autorefresh">Atualização automática (10s)</label>
+          </div>
+          <small class="text-muted" v-if="ultimaAtualizacao">Última atualização: [[ultimaAtualizacao]]</small>
         </div>
       </div>
     </div>
@@ -97,7 +106,10 @@ const app = Vue.createApp({
     email: "", senha: "", erro: "",
     filtro: "",
     tickets: [],
-    token: localStorage.getItem("access")
+    token: localStorage.getItem("access"),
+    autoRefresh: false,
+    timer: null,
+    ultimaAtualizacao: ""
   }},
   methods:{
     async login(){
@@ -114,26 +126,44 @@ const app = Vue.createApp({
     sair(){
       localStorage.clear();
       this.token = null;
+      this.stopAutoRefresh();
     },
     async carregar(){
       if(!this.token) return;
       const url = this.filtro ? `/api/tickets/?status=${this.filtro}` : "/api/tickets/";
       const {data} = await axios.get(url, {headers:{Authorization:`Bearer ${this.token}`}});
       this.tickets = data;
+      this.ultimaAtualizacao = new Date().toLocaleTimeString();
     },
     async salvar(t){
       try{
-        // PATCH (parcial) para não exigir título/descrição/setor/etc
-        await axios.patch(`/api/tickets/${t.id}/`, {status: t.status}, {headers:{Authorization:`Bearer ${this.token}`}});
+        await axios.patch(`/api/tickets/${t.id}/`, {status: t.status}, {
+          headers:{Authorization:`Bearer ${this.token}`}
+        });
         this.carregar();
       }catch(e){
         alert("Erro ao salvar: " + (e.response?.data ? JSON.stringify(e.response.data) : e.message));
       }
+    },
+    toggleAutoRefresh(){
+      if(this.autoRefresh) this.startAutoRefresh(); else this.stopAutoRefresh();
+    },
+    startAutoRefresh(){
+      this.stopAutoRefresh();
+      this.timer = setInterval(this.carregar, 10000); // 10s
+    },
+    stopAutoRefresh(){
+      if(this.timer){ clearInterval(this.timer); this.timer = null; }
     }
   },
-  mounted(){ if(this.token) this.carregar(); }
+  mounted(){
+    if(this.token) this.carregar();
+  },
+  beforeUnmount(){
+    this.stopAutoRefresh();
+  }
 });
-// >>> Mudar delimitadores do Vue para não conflitar com Django:
+// evitar conflito Django x Vue
 app.config.compilerOptions.delimiters = ['[[', ']]'];
 app.mount("#app");
 </script>
