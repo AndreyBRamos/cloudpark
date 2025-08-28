@@ -129,7 +129,7 @@ async function carregar(){
       const sel = document.querySelector(`select.sel-status[data-id="${id}"]`);
       const novoStatus = sel.value;
       const res = await fetch(`/api/tickets/${id}/`, {
-        method: "PUT",
+        method: "PATCH",
         headers: authHeaders(),
         body: JSON.stringify({status: novoStatus})
       });
