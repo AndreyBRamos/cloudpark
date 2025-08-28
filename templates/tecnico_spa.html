@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="utf-8" />
+  <title>SPA Técnico - Chamados</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>body{padding:20px}</style>
+</head>
+<body>
+<div id="app" class="container">
+  <div class="d-flex align-items-center justify-content-between mb-3">
+    <h3>Área do Técnico (SPA)</h3>
+    <div>
+      <button class="btn btn-outline-secondary btn-sm" @click="sair" v-if="token">Sair</button>
+      <a class="btn btn-link btn-sm" href="/atendente/login/">Área do Atendente</a>
+    </div>
+  </div>
+
+  <div v-if="!token" class="row justify-content-center">
+    <div class="col-md-6">
+      <div class="card shadow-sm">
+        <div class="card-body">
+          <h5>Login do Técnico</h5>
+          <div class="mb-2">
+            <label class="form-label">E-mail</label>
+            <input v-model="email" class="form-control" placeholder="tecnico@demo.com">
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Senha</label>
+            <input v-model="senha" type="password" class="form-control" placeholder="123456">
+          </div>
+          <button class="btn btn-primary w-100" @click="login">Entrar</button>
+          <p class="text-muted mt-2 small">Dica: <code>tecnico@demo.com / 123456</code></p>
+          <div class="text-danger small">{{erro}}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div v-else>
+    <div class="card mb-3">
+      <div class="card-body row g-2 align-items-end">
+        <div class="col-md-3">
+          <label class="form-label">Filtrar por status</label>
+          <select v-model="filtro" class="form-select">
+            <option value="">Todos</option>
+            <option value="ABERTO">Aberto</option>
+            <option value="EM_ATENDIMENTO">Em Atendimento</option>
+            <option value="RESOLVIDO">Resolvido</option>
+            <option value="CANCELADO">Cancelado</option>
+          </select>
+        </div>
+        <div class="col-md-2">
+          <button class="btn btn-primary w-100" @click="carregar">Carregar</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="table-responsive">
+      <table class="table table-sm align-middle">
+        <thead>
+          <tr>
+            <th>ID</th><th>Título</th><th>Status</th><th>Prioridade</th><th>Setor</th>
+            <th>Criado por</th><th>Atribuído</th><th>Ação</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="t in tickets" :key="t.id">
+            <td>{{t.id}}</td>
+            <td>{{t.titulo}}</td>
+            <td>
+              <select v-model="t.status" class="form-select form-select-sm">
+                <option value="ABERTO">ABERTO</option>
+                <option value="EM_ATENDIMENTO">EM_ATENDIMENTO</option>
+                <option value="RESOLVIDO">RESOLVIDO</option>
+                <option value="CANCELADO">CANCELADO</option>
+              </select>
+            </td>
+            <td>{{t.prioridade}}</td>
+            <td>{{t.setor}}</td>
+            <td>{{t.criado_por_info?.username}}</td>
+            <td>{{t.atribuido_a_info?.username}}</td>
+            <td><button class="btn btn-outline-primary btn-sm" @click="salvar(t)">Salvar</button></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<script>
+const app = Vue.createApp({
+  data(){ return {
+    email: "", senha: "", erro: "",
+    filtro: "",
+    tickets: [],
+    token: localStorage.getItem("access")
+  }},
+  methods:{
+    async login(){
+      try{
+        const {data} = await axios.post("/api/token/", {username:this.email, password:this.senha});
+        localStorage.setItem("access", data.access);
+        localStorage.setItem("refresh", data.refresh);
+        this.token = data.access;
+        this.carregar();
+      }catch(e){
+        this.erro = "Credenciais inválidas";
+      }
+    },
+    sair(){
+      localStorage.clear();
+      this.token = null;
+    },
+    async carregar(){
+      if(!this.token) return;
+      const url = this.filtro ? `/api/tickets/?status=${this.filtro}` : "/api/tickets/";
+      const {data} = await axios.get(url, {headers:{Authorization:`Bearer ${this.token}`}});
+      this.tickets = data;
+    },
+    async salvar(t){
+      try{
+        await axios.put(`/api/tickets/${t.id}/`, {status: t.status}, {headers:{Authorization:`Bearer ${this.token}`}});
+        this.carregar();
+      }catch(e){
+        alert("Erro ao salvar: " + (e.response?.data ? JSON.stringify(e.response.data) : e.message));
+      }
+    }
+  },
+  mounted(){ if(this.token) this.carregar(); }
+});
+app.mount("#app");
+</script>
+</body>
+</html>
