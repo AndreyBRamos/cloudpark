@@ -5,6 +5,8 @@
 - Node **não** é obrigatório (Vue via CDN)
 - SQLite (padrão do Django)
 
+O video do sistema está no repositório como: cloudpark_chamados.mp4
+
 ## Setup rápido
 ```bash
 python -m venv .venv
