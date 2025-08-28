@@ -74,8 +74,10 @@
           </select>
         </div>
         <div class="col-md-3">
-          <label class="form-label">Atribuir a (opcional - ID do técnico)</label>
-          <input id="atribuido_a" class="form-control" type="number" placeholder="ex: 2" />
+          <label class="form-label">Atribuir a (opcional)</label>
+          <select id="atribuido_a" class="form-select">
+            <option value="">Selecione um usuário...</option>
+          </select>
         </div>
         <div class="col-md-3">
           <button class="btn btn-success w-100" type="submit">Criar</button>
@@ -102,6 +104,30 @@
 // Variáveis para autopolling
 let autoRefreshTimer = null;
 let ultimaAtualizacao = "";
+
+// Função para carregar usuários no dropdown
+async function carregarUsuarios() {
+  try {
+    const res = await fetch("/api/tickets/usuarios/", { headers: authHeaders() });
+    if (res.ok) {
+      const usuarios = await res.json();
+      const select = document.getElementById("atribuido_a");
+      
+      // Limpar opções existentes (mantendo a primeira)
+      select.innerHTML = '<option value="">Selecione um usuário...</option>';
+      
+      // Adicionar opções dos usuários
+      usuarios.forEach(usuario => {
+        const option = document.createElement("option");
+        option.value = usuario.id;
+        option.textContent = usuario.email || usuario.username;
+        select.appendChild(option);
+      });
+    }
+  } catch (err) {
+    console.error("Erro ao carregar usuários:", err);
+  }
+}
 
 function token(){ return localStorage.getItem("access_atendente"); }
 function authHeaders(){ return {"Authorization":"Bearer " + token(), "Content-Type":"application/json"}; }
@@ -138,6 +164,9 @@ function stopAutoRefresh() {
 
 // Adicionar event listener para o checkbox
 document.getElementById("autorefresh").addEventListener("change", toggleAutoRefresh);
+
+// Carregar usuários quando a página carregar
+carregarUsuarios();
 
 async function carregar(){
   const status = document.getElementById("filtroStatus").value;
@@ -200,7 +229,7 @@ document.getElementById("formNovo").addEventListener("submit", async (e) => {
     setor: document.getElementById("setor").value.trim(),
     status: document.getElementById("status").value,
   };
-  const atrib = document.getElementById("atribuido_a").value.trim();
+  const atrib = document.getElementById("atribuido_a").value;
   if(atrib) body.atribuido_a = Number(atrib);
 
   try {
