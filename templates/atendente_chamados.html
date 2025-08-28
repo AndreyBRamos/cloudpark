@@ -92,11 +92,15 @@
 </div>
 
 <script>
-function token(){ return localStorage.getItem("access"); }
+function token(){ return localStorage.getItem("access_atendente"); }
 function authHeaders(){ return {"Authorization":"Bearer " + token(), "Content-Type":"application/json"}; }
 function exigirToken(){ if(!token()){ window.location.href="/atendente/login/"; } }
 exigirToken();
-document.getElementById("sair").onclick = () => { localStorage.clear(); window.location.href="/atendente/login/"; };
+document.getElementById("sair").onclick = () => {  
+  localStorage.removeItem("access_atendente");
+  localStorage.removeItem("refresh_atendente");
+  window.location.href="/atendente/login/";
+};
 
 async function carregar(){
   const status = document.getElementById("filtroStatus").value;

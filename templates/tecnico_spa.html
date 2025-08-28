@@ -106,7 +106,7 @@ const app = Vue.createApp({
     email: "", senha: "", erro: "",
     filtro: "",
     tickets: [],
-    token: localStorage.getItem("access"),
+    token: localStorage.getItem("access_tecnico"),
     autoRefresh: false,
     timer: null,
     ultimaAtualizacao: ""
@@ -115,8 +115,8 @@ const app = Vue.createApp({
     async login(){
       try{
         const {data} = await axios.post("/api/token/", {username:this.email, password:this.senha});
-        localStorage.setItem("access", data.access);
-        localStorage.setItem("refresh", data.refresh);
+        localStorage.setItem("access_tecnico", data.access);
+        localStorage.setItem("refresh_tecnico", data.refresh);
         this.token = data.access;
         this.carregar();
       }catch(e){
@@ -124,9 +124,10 @@ const app = Vue.createApp({
       }
     },
     sair(){
-      localStorage.clear();
+      localStorage.removeItem("access_tecnico");
+      localStorage.removeItem("refresh_tecnico");
       this.token = null;
-      this.stopAutoRefresh();
+      this.stopAutoRefresh && this.stopAutoRefresh();
     },
     async carregar(){
       if(!this.token) return;

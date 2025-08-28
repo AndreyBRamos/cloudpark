@@ -48,8 +48,8 @@ document.getElementById("formLogin").addEventListener("submit", async (e) => {
     });
     if(!res.ok){ throw new Error("Credenciais inválidas"); }
     const data = await res.json();
-    localStorage.setItem("access", data.access);
-    localStorage.setItem("refresh", data.refresh);
+    localStorage.setItem("access_atendente", data.access);
+    localStorage.setItem("refresh_atendente", data.refresh);
     window.location.href = "/atendente/chamados/";
   } catch(err){
     document.getElementById("msg").innerText = err.message;
