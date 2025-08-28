@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="utf-8" />
+  <title>Login - Atendente</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>body{padding-top:60px}</style>
+</head>
+<body class="bg-light">
+<div class="container">
+  <div class="row justify-content-center">
+    <div class="col-md-5">
+      <div class="card shadow-sm">
+        <div class="card-body">
+          <h4 class="mb-3">Login do Atendente</h4>
+          <form id="formLogin">
+            <div class="mb-3">
+              <label class="form-label">E-mail</label>
+              <input id="email" type="email" class="form-control" placeholder="atendente@demo.com" required>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Senha</label>
+              <input id="senha" type="password" class="form-control" placeholder="123456" required>
+            </div>
+            <button class="btn btn-primary w-100" type="submit">Entrar</button>
+          </form>
+          <p class="text-muted mt-3 small">Dica: <code>atendente@demo.com</code> / <code>123456</code></p>
+          <div id="msg" class="text-danger small mt-2"></div>
+        </div>
+      </div>
+      <div class="text-center mt-3">
+        <a href="/tecnico/">Área do Técnico (SPA)</a>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+document.getElementById("formLogin").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const username = document.getElementById("email").value.trim();
+  const password = document.getElementById("senha").value;
+  try {
+    const res = await fetch("/api/token/", {
+      method: "POST",
+      headers: {"Content-Type":"application/json"},
+      body: JSON.stringify({username, password})
+    });
+    if(!res.ok){ throw new Error("Credenciais inválidas"); }
+    const data = await res.json();
+    localStorage.setItem("access", data.access);
+    localStorage.setItem("refresh", data.refresh);
+    window.location.href = "/atendente/chamados/";
+  } catch(err){
+    document.getElementById("msg").innerText = err.message;
+  }
+});
+</script>
+</body>
+</html>
