@@ -1,4 +1,4 @@
-# CloudPark - App de Chamados (Django + DRF + JWT + Templates + Vue 3)
+# App de Chamados (Django + DRF + JWT + Templates + Vue 3)
 
 ## Requisitos
 - Python 3.10+
